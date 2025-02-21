@@ -21,8 +21,9 @@
 #include <vector>
 #include <stdexcept>
 #include <iostream>
-
-// Místo pro Vaše případné includy, používejte pouze standardní knihovnu tak, aby nebylo nutno upravovat CMake.
+#include <unordered_map>
+#include <algorithm>
+#include <set>
 
 /**
  * @brief reprezentace uzlu
@@ -30,7 +31,9 @@
 struct Node{
     size_t id;  ///< jednoznačný identifikátor uzlu
     size_t color;  ///< celé číslo reprezentující barvu uzlu, výchozí barva je 0 a značí neobarveno
-    // doplňte vhodné struktury, pokud potřebujete
+
+    // Konstruktor uzlu s výchozí barvou 0 (neobarveno)
+    Node(size_t nodeId) : id(nodeId), color(0) {}
 };
 
 /**
@@ -203,8 +206,14 @@ public:
     void clear();
 
 protected:
-    // doplňte vhodné struktury
+    // Mapa pro ukládání uzlů, kde klíč je ID uzlu a hodnota je ukazatel na uzel
+    std::unordered_map<size_t, Node*> m_nodes;
 
+    // Vektor hran v grafu
+    std::vector<Edge> m_edges;
+
+    // Mapa pro ukládání sousednosti uzlů, kde klíč je ID uzlu a hodnota je vektor ID sousedních uzlů
+    std::unordered_map<size_t, std::vector<size_t>> m_adjacency;
 };
 
 #endif // TDD_CODE_H_
