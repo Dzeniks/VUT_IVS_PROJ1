@@ -33,6 +33,37 @@
 //      *STEJNY* pocet cernych uzlu.
 //============================================================================//
 
+//============================================================================//
+// Empty Tree Tests
+//============================================================================//
+
+TEST(EmptyTree, InsertNode_Basic) {
+    BinaryTree tree;
+    auto result = tree.InsertNode(10);
+    
+    EXPECT_TRUE(result.first);  // Insertion should succeed
+    EXPECT_NE(result.second, nullptr);  // Node should be created
+    EXPECT_EQ(result.second->key, 10);  // Node should have correct key
+    EXPECT_EQ(tree.GetRoot(), result.second);  // Should be root
+    EXPECT_EQ(tree.GetRoot()->color, BinaryTree::BLACK);  // Root should be black
+}
+
+TEST(EmptyTree, DeleteNode_NonExistent) {
+    BinaryTree tree;
+    EXPECT_FALSE(tree.DeleteNode(10));  // Deletion should fail on empty tree
+}
+
+TEST(EmptyTree, FindNode_NonExistent) {
+    BinaryTree tree;
+    EXPECT_EQ(tree.FindNode(10), nullptr);  // Find should return nullptr on empty tree
+}
+
+
+//============================================================================//
+// Non-Empty Tree Tests
+//============================================================================//
+
+
 class BinaryTreeTest : public ::testing::Test {
 protected:
     BinaryTree tree;
@@ -246,5 +277,70 @@ TEST_F(BinaryTreeTest, RedBlackProperties) {
         }
     }
 }
+
+//============================================================================//
+// Red-Black Tree Axiom Tests
+//============================================================================//
+
+class TreeAxioms : public ::testing::Test {
+    protected:
+        void SetUp() override {
+            // Insert various nodes to create a complex tree structure
+            std::vector<int> values = {50, 30, 70, 20, 40, 60, 80, 35, 45, 65, 75};
+            for (int val : values) {
+                tree.InsertNode(val);
+            }
+        }
+    
+        bool isBlack(BinaryTree::Node_t* node) {
+            return node == nullptr || node->color == BinaryTree::BLACK;
+        }
+    
+        int getBlackHeight(BinaryTree::Node_t* node) {
+            if (node == nullptr) return 1;  // NIL nodes are considered black
+            
+            int leftHeight = getBlackHeight(node->pLeft);
+            int rightHeight = getBlackHeight(node->pRight);
+            
+            // If either subtree has invalid black height, return -1
+            if (leftHeight == -1 || rightHeight == -1) return -1;
+            if (leftHeight != rightHeight) return -1;
+            
+            return leftHeight + (isBlack(node) ? 1 : 0);
+        }
+    
+        BinaryTree tree;
+    };
+    
+    TEST_F(TreeAxioms, Axiom1_LeafNodesAreBlack) {
+        std::vector<BinaryTree::Node_t*> leafNodes;
+        tree.GetLeafNodes(leafNodes);
+        
+        for (auto node : leafNodes) {
+            if (node != nullptr) {  // Some implementations might return nullptr for NIL nodes
+                EXPECT_TRUE(isBlack(node)) << "Leaf node with key " << node->key << " is not black";
+            }
+        }
+    }
+    
+    TEST_F(TreeAxioms, Axiom2_RedNodesHaveBlackChildren) {
+        std::vector<BinaryTree::Node_t*> allNodes;
+        tree.GetAllNodes(allNodes);
+        
+        for (auto node : allNodes) {
+            if (node != nullptr && node->color == BinaryTree::RED) {
+                EXPECT_TRUE(isBlack(node->pLeft)) 
+                    << "Left child of red node " << node->key << " is not black";
+                EXPECT_TRUE(isBlack(node->pRight))
+                    << "Right child of red node " << node->key << " is not black";
+            }
+        }
+    }
+    
+    TEST_F(TreeAxioms, Axiom3_BlackHeightConsistency) {
+        // Check if black height is consistent for all paths
+        int blackHeight = getBlackHeight(tree.GetRoot());
+        EXPECT_NE(blackHeight, -1) << "Black height is not consistent across all paths";
+    }
 
 /*** Konec souboru black_box_tests.cpp ***/
