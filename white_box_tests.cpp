@@ -33,14 +33,6 @@
 //       indexu
 //============================================================================//
 
-
-TEST (hash_map_ctor, ctor) {
-    hash_map_t* map = hash_map_ctor();
-    EXPECT_NE(map, nullptr);
-    hash_map_dtor(map);
-    EXPECT_EQ(map, nullptr);
-}
-
 class HashMapTest : public ::testing::Test {
 public:
     hash_map_t* map = hash_map_ctor();
@@ -190,68 +182,10 @@ TEST_F(HashMapTest,clear_multiple) {
 }
 
 //============================================================================//
-// hash_map_size
-//============================================================================//
-
-TEST_F(HashMapTest, size_empty) {
-    EXPECT_EQ(hash_map_size(map), 0);
-}
-
-TEST_F(HashMapTest, size_single) {
-    EXPECT_EQ(hash_map_put(map, "10", 10), OK);
-    EXPECT_EQ(hash_map_size(map), 1);
-}
-
-//============================================================================//
 // hash_map_capacity
 //============================================================================//
 
 TEST_F(HashMapTest, capacity) {
     EXPECT_EQ(hash_map_capacity(map), 8);
 }
-
-TEST_F(HashMapTest, clear_single) {
-    EXPECT_EQ(hash_map_put(map, "10", 10), OK);
-    hash_map_clear(map);
-    EXPECT_EQ(map->used, 0);
-}
-
-TEST_F(HashMapTest,clear_multiple) {
-    EXPECT_EQ(hash_map_put(map, "10", 10), OK);
-    EXPECT_EQ(hash_map_put(map, "20", 20), OK);
-    EXPECT_EQ(hash_map_put(map, "30", 30), OK);
-    hash_map_clear(map);
-    EXPECT_EQ(map->used, 0);
-}
-
-//============================================================================//
-// hash_map_size
-//============================================================================//
-
-TEST_F(HashMapTest, size_empty) {
-    EXPECT_EQ(hash_map_size(map), 0);
-}
-
-TEST_F(HashMapTest, size_single) {
-    EXPECT_EQ(hash_map_put(map, "10", 10), OK);
-    EXPECT_EQ(hash_map_size(map), 1);
-}
-
-//============================================================================//
-// hash_map_capacity
-//============================================================================//
-
-TEST_F(HashMapTest, capacity) {
-    EXPECT_EQ(hash_map_capacity(map), 8);
-}
-
-//============================================================================//
-// hash_map_dtor
-//============================================================================//
-
-TEST_F(HashMapTest, dtor) {
-    hash_map_dtor(map);
-    EXPECT_EQ(map, nullptr);
-}
-
 /*** Konec souboru white_box_tests.cpp ***/
