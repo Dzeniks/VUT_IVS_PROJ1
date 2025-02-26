@@ -107,10 +107,17 @@ TEST_F(HashMapTest, put_Multiple) {
     EXPECT_EQ(hash_map_put(map, "70", 70), OK);
 }
 
-// Kolize
+// Kolize klíčů
 TEST_F(HashMapTest, put_DuplicateKey) {
     EXPECT_EQ(hash_map_put(map, "10", 10), OK);
     EXPECT_EQ(hash_map_put(map, "10", 10), KEY_ALREADY_EXISTS);
+}
+
+// Kolize hashů
+TEST_F(HashMapTest, put_DuplicateHash) {
+    EXPECT_EQ(hash_map_put(map, "ab", 10), OK);
+    EXPECT_EQ(hash_map_put(map, "ba", 10), OK);
+
 }
 
 TEST_F(HashMapTest, put_DuplicateValue) {
@@ -166,6 +173,41 @@ TEST_F(HashMapTest, pop_empty) {
 TEST_F(HashMapTest, clear_empty) {
     hash_map_clear(map);
     EXPECT_EQ(map->used, 0);
+}
+
+TEST_F(HashMapTest, clear_single) {
+    EXPECT_EQ(hash_map_put(map, "10", 10), OK);
+    hash_map_clear(map);
+    EXPECT_EQ(map->used, 0);
+}
+
+TEST_F(HashMapTest,clear_multiple) {
+    EXPECT_EQ(hash_map_put(map, "10", 10), OK);
+    EXPECT_EQ(hash_map_put(map, "20", 20), OK);
+    EXPECT_EQ(hash_map_put(map, "30", 30), OK);
+    hash_map_clear(map);
+    EXPECT_EQ(map->used, 0);
+}
+
+//============================================================================//
+// hash_map_size
+//============================================================================//
+
+TEST_F(HashMapTest, size_empty) {
+    EXPECT_EQ(hash_map_size(map), 0);
+}
+
+TEST_F(HashMapTest, size_single) {
+    EXPECT_EQ(hash_map_put(map, "10", 10), OK);
+    EXPECT_EQ(hash_map_size(map), 1);
+}
+
+//============================================================================//
+// hash_map_capacity
+//============================================================================//
+
+TEST_F(HashMapTest, capacity) {
+    EXPECT_EQ(hash_map_capacity(map), 8);
 }
 
 TEST_F(HashMapTest, clear_single) {
