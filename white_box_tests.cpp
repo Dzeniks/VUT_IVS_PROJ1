@@ -48,9 +48,14 @@ TEST_F(HashMapTest, reserve_small) {
     EXPECT_EQ(hash_map_reserve(map, map->used-1), MEMORY_ERROR);
 }
 
+TEST_F(HashMapTest, reserve_zero) {
+    hash_map_put(map, "10", 10);
+    EXPECT_EQ(hash_map_reserve(map, 1), OK);
+    EXPECT_EQ(hash_map_contains(map, "10"), true);
+}
+
 
 TEST_F(HashMapTest, reserve_eq) {
-    // Put
     EXPECT_EQ(hash_map_reserve(map, map->allocated), OK);
 }
 
@@ -138,7 +143,15 @@ TEST_F(HashMapTest, get_single) {
 //============================================================================//
 
 TEST_F(HashMapTest, remove_empty) {
+    size_t size_before = map->used;
     EXPECT_EQ(hash_map_remove(map, "10"), KEY_ERROR);
+    EXPECT_EQ(map->used, (size_before-1));
+}
+
+TEST_F(HashMapTest, remove_size_check) {
+    size_t size_before = map->used;
+    EXPECT_EQ(hash_map_remove(map, "10"), KEY_ERROR);
+    EXPECT_EQ(map->used, (size_before-1));
 }
 
 TEST_F(HashMapTest, remove_single) {
