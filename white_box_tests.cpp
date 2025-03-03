@@ -33,68 +33,80 @@
 //       indexu
 //============================================================================//
 
-class HashMapTest : public ::testing::Test {
-public:
-    hash_map_t* map = hash_map_ctor();
+// Test suite for testing empty hash map
+class EmptyMapTest : public ::testing::Test {
+protected:
+    hash_map_t* map;
+
+    void SetUp() override {
+        map = hash_map_ctor();
+    }
+
+    void TearDown() override {
+        hash_map_dtor(map);
+    }
 };
 
+// Test suite for testing non-empty hash map
+class NonEmptyMapTest : public ::testing::Test {
+protected:
+    hash_map_t* map;
+
+    void SetUp() override {
+        map = hash_map_ctor();
+        // Initialize map with some data
+        hash_map_put(map, "10", 10);
+        hash_map_put(map, "20", 20);
+        hash_map_put(map, "30", 30);
+    }
+
+    void TearDown() override {
+        hash_map_dtor(map);
+    }
+};
 
 //============================================================================//
-// hash_map_reserve
+// EmptyMapTest - hash_map_reserve
 //============================================================================//
 
-TEST_F(HashMapTest, reserve_small) {
+TEST_F(EmptyMapTest, reserve_Small) {
     EXPECT_EQ(hash_map_reserve(map, 1), OK);
-    EXPECT_EQ(hash_map_reserve(map, map->used-1), MEMORY_ERROR);
+    EXPECT_EQ(hash_map_reserve(map, map->used - 1), MEMORY_ERROR);
 }
 
-TEST_F(HashMapTest, reserve_zero) {
-    hash_map_put(map, "10", 10);
-    EXPECT_EQ(hash_map_reserve(map, 10), OK);
-    EXPECT_EQ(hash_map_contains(map, "10"), true);
+TEST_F(EmptyMapTest, reserve_Zero) {
+    EXPECT_EQ(hash_map_reserve(map, 0), OK);
 }
 
-
-TEST_F(HashMapTest, reserve_eq) {
+TEST_F(EmptyMapTest, reserve_Equal) {
     EXPECT_EQ(hash_map_reserve(map, map->allocated), OK);
 }
 
-TEST_F(HashMapTest, reserve_bigger) {
+TEST_F(EmptyMapTest, reserve_bigger) {
     EXPECT_EQ(hash_map_reserve(map, map->allocated + map->allocated), OK);
 }
 
 //============================================================================//
-// hash_map_contains
+// EmptyMapTest - hash_map_contains
 //============================================================================//
 
-TEST_F(HashMapTest, contains_empty) {
+TEST_F(EmptyMapTest, contains_Empty) {
     EXPECT_EQ(hash_map_contains(map, "10"), false);
 }
 
-TEST_F(HashMapTest, contains_single) {
+//============================================================================//
+// EmptyMapTest - hash_map_put
+//============================================================================//
+
+TEST_F(EmptyMapTest, put_Single) {
     EXPECT_EQ(hash_map_put(map, "10", 10), OK);
-    EXPECT_EQ(hash_map_contains(map, "10"), true);
 }
 
-//============================================================================//
-// hash_map_put
-//============================================================================//
-
-// put to hash map
-TEST_F(HashMapTest, put_Single) {
-    // Put
-    hash_map_state_code_t result = hash_map_put(map, "10", 10);
-    EXPECT_EQ(result, OK);
+TEST_F(EmptyMapTest, put_SingleEmptyStr) {
+    EXPECT_EQ(hash_map_put(map, "", 10), OK);
 }
 
-TEST_F(HashMapTest, put_SingleEmptyStr) {
-    // Put
-    hash_map_state_code_t result = hash_map_put(map, "", 10);
-    EXPECT_EQ(result, OK);
-}
-
-// Reallocate
-TEST_F(HashMapTest, put_Multiple) {
+TEST_F(EmptyMapTest, put_Multiple) {
     EXPECT_EQ(hash_map_put(map, "10", 10), OK);
     EXPECT_EQ(hash_map_put(map, "20", 20), OK);
     EXPECT_EQ(hash_map_put(map, "30", 30), OK);
@@ -104,99 +116,209 @@ TEST_F(HashMapTest, put_Multiple) {
     EXPECT_EQ(hash_map_put(map, "70", 70), OK);
 }
 
-// Kolize klíčů
-TEST_F(HashMapTest, put_DuplicateKey) {
-    EXPECT_EQ(hash_map_put(map, "10", 10), OK);
-    EXPECT_EQ(hash_map_put(map, "10", 10), KEY_ALREADY_EXISTS);
-}
-
-// Kolize hashů
-TEST_F(HashMapTest, put_DuplicateHash) {
+TEST_F(EmptyMapTest, put_WithHashCollision) {
     EXPECT_EQ(hash_map_put(map, "ab", 10), OK);
-    EXPECT_EQ(hash_map_put(map, "ba", 10), OK);
-
-}
-
-TEST_F(HashMapTest, put_DuplicateValue) {
-    EXPECT_EQ(hash_map_put(map, "10", 10), OK);
-    EXPECT_EQ(hash_map_put(map, "20", 10), OK);
+    EXPECT_EQ(hash_map_put(map, "ba", 20), OK);  // "ab" and "ba" have same hash
 }
 
 //============================================================================//
-// hash_map_get
+// EmptyMapTest - hash_map_get
 //============================================================================//
 
-TEST_F(HashMapTest, get_empty) {
+TEST_F(EmptyMapTest, get_Empty) {
     int value;
     EXPECT_EQ(hash_map_get(map, "10", &value), KEY_ERROR);
 }
 
-TEST_F(HashMapTest, get_single) {
-    EXPECT_EQ(hash_map_put(map, "10", 10), OK);
-    int value;
-    EXPECT_EQ(hash_map_get(map, "10", &value), OK);
-    EXPECT_EQ(value, 10);
-}
-
 //============================================================================//
-// hash_map_remove
+// EmptyMapTest - hash_map_remove
 //============================================================================//
 
-TEST_F(HashMapTest, remove_empty) {
+TEST_F(EmptyMapTest, remove_Empty) {
     EXPECT_EQ(hash_map_remove(map, "10"), KEY_ERROR);
 }
 
-TEST_F(HashMapTest, remove_size_check) {
+TEST_F(EmptyMapTest, remove_SizeCheck) {
     size_t size_before = map->used;
     EXPECT_EQ(hash_map_remove(map, "10"), KEY_ERROR);
-    EXPECT_EQ(map->used, (size_before-1));
-}
-
-TEST_F(HashMapTest, remove_single) {
-    EXPECT_EQ(hash_map_put(map, "10", 10), OK);
-    int value;
-    EXPECT_EQ(hash_map_remove(map, "10"), OK);
-    EXPECT_EQ(hash_map_get(map, "10", &value), KEY_ERROR);
+    EXPECT_EQ(map->used, size_before);  // Should remain unchanged
 }
 
 //============================================================================//
-// hash_map_pop
+// EmptyMapTest - hash_map_pop
 //============================================================================//
 
-TEST_F(HashMapTest, pop_empty) {
+TEST_F(EmptyMapTest, pop_Empty) {
     int value;
     EXPECT_EQ(hash_map_pop(map, "10", &value), KEY_ERROR);
 }
 
-
 //============================================================================//
-// hash_map_clear
+// EmptyMapTest - hash_map_clear
 //============================================================================//
 
-TEST_F(HashMapTest, clear_empty) {
-    hash_map_clear(map);
-    EXPECT_EQ(map->used, 0);
-}
-
-TEST_F(HashMapTest, clear_single) {
-    EXPECT_EQ(hash_map_put(map, "10", 10), OK);
-    hash_map_clear(map);
-    EXPECT_EQ(map->used, 0);
-}
-
-TEST_F(HashMapTest,clear_multiple) {
-    EXPECT_EQ(hash_map_put(map, "10", 10), OK);
-    EXPECT_EQ(hash_map_put(map, "20", 20), OK);
-    EXPECT_EQ(hash_map_put(map, "30", 30), OK);
+TEST_F(EmptyMapTest, clear_Empty) {
     hash_map_clear(map);
     EXPECT_EQ(map->used, 0);
 }
 
 //============================================================================//
-// hash_map_capacity
+// EmptyMapTest - hash_map_capacity
 //============================================================================//
 
-TEST_F(HashMapTest, capacity) {
-    EXPECT_EQ(hash_map_capacity(map), 8);
+TEST_F(EmptyMapTest, capacity) {
+    EXPECT_EQ(hash_map_capacity(map), 8);  // Default capacity
 }
+
+//============================================================================//
+// NonEmptyMapTest - hash_map_reserve
+//============================================================================//
+
+TEST_F(NonEmptyMapTest, reserve_Small) {
+    EXPECT_EQ(hash_map_reserve(map, 1), MEMORY_ERROR);  // Cannot reserve less than used
+}
+
+TEST_F(NonEmptyMapTest, reserve_Equal) {
+    EXPECT_EQ(hash_map_reserve(map, map->allocated), OK);
+}
+
+TEST_F(NonEmptyMapTest, reserve_Bigger) {
+    EXPECT_EQ(hash_map_reserve(map, map->allocated * 2), OK);
+}
+
+//============================================================================//
+// NonEmptyMapTest - hash_map_contains
+//============================================================================//
+
+TEST_F(NonEmptyMapTest, contains_Existing) {
+    EXPECT_EQ(hash_map_contains(map, "10"), true);
+    EXPECT_EQ(hash_map_contains(map, "20"), true);
+    EXPECT_EQ(hash_map_contains(map, "30"), true);
+}
+
+TEST_F(NonEmptyMapTest, contains_NonExisting) {
+    EXPECT_EQ(hash_map_contains(map, "40"), false);
+    EXPECT_EQ(hash_map_contains(map, ""), false);
+}
+
+//============================================================================//
+// NonEmptyMapTest - hash_map_put
+//============================================================================//
+
+TEST_F(NonEmptyMapTest, put_DuplicateKey) {
+    EXPECT_EQ(hash_map_put(map, "10", 100), KEY_ALREADY_EXISTS);
+}
+
+TEST_F(NonEmptyMapTest, put_DuplicateValue) {
+    EXPECT_EQ(hash_map_put(map, "40", 10), OK);  // Same value as key "10" but different key
+}
+
+TEST_F(NonEmptyMapTest, put_Additional) {
+    EXPECT_EQ(hash_map_put(map, "40", 40), OK);
+    EXPECT_EQ(hash_map_contains(map, "40"), true);
+}
+
+//============================================================================//
+// NonEmptyMapTest - hash_map_get
+//============================================================================//
+
+TEST_F(NonEmptyMapTest, get_Existing) {
+    int value;
+    EXPECT_EQ(hash_map_get(map, "10", &value), OK);
+    EXPECT_EQ(value, 10);
+
+    EXPECT_EQ(hash_map_get(map, "20", &value), OK);
+    EXPECT_EQ(value, 20);
+
+    EXPECT_EQ(hash_map_get(map, "30", &value), OK);
+    EXPECT_EQ(value, 30);
+}
+
+TEST_F(NonEmptyMapTest, get_NonExisting) {
+    int value;
+    EXPECT_EQ(hash_map_get(map, "40", &value), KEY_ERROR);
+}
+
+//============================================================================//
+// NonEmptyMapTest - hash_map_remove
+//============================================================================//
+
+TEST_F(NonEmptyMapTest, remove_Existing) {
+    EXPECT_EQ(hash_map_remove(map, "10"), OK);
+    EXPECT_EQ(hash_map_contains(map, "10"), false);
+
+    // Check other keys still exist
+    EXPECT_EQ(hash_map_contains(map, "20"), true);
+    EXPECT_EQ(hash_map_contains(map, "30"), true);
+}
+
+TEST_F(NonEmptyMapTest, remove_NonExisting) {
+    EXPECT_EQ(hash_map_remove(map, "40"), KEY_ERROR);
+}
+
+TEST_F(NonEmptyMapTest, remove_SizeCheck) {
+    size_t size_before = map->used;
+    EXPECT_EQ(hash_map_remove(map, "10"), OK);
+    EXPECT_EQ(map->used, size_before - 1);
+}
+
+//============================================================================//
+// NonEmptyMapTest - hash_map_pop
+//============================================================================//
+
+TEST_F(NonEmptyMapTest, pop_Existing) {
+    int value;
+    EXPECT_EQ(hash_map_pop(map, "10", &value), OK);
+    EXPECT_EQ(value, 10);
+    EXPECT_EQ(hash_map_contains(map, "10"), false);
+}
+
+TEST_F(NonEmptyMapTest, pop_NonExisting) {
+    int value;
+    EXPECT_EQ(hash_map_pop(map, "40", &value), KEY_ERROR);
+}
+
+//============================================================================//
+// NonEmptyMapTest - hash_map_clear
+//============================================================================//
+
+TEST_F(NonEmptyMapTest, clear) {
+    hash_map_clear(map);
+    EXPECT_EQ(map->used, 0);
+    EXPECT_EQ(hash_map_contains(map, "10"), false);
+    EXPECT_EQ(hash_map_contains(map, "20"), false);
+    EXPECT_EQ(hash_map_contains(map, "30"), false);
+}
+
+//============================================================================//
+// NonEmptyMapTest - hash_map_capacity
+//============================================================================//
+
+TEST_F(NonEmptyMapTest, Capacity) {
+    EXPECT_EQ(hash_map_capacity(map), 8);  // Default capacity unless it was reallocated
+}
+
+//============================================================================//
+// Test for hash collisions
+//============================================================================//
+
+TEST_F(NonEmptyMapTest, HashCollisions) {
+    // First, add keys with same hash but different values
+    EXPECT_EQ(hash_map_put(map, "ab", 100), OK);
+    EXPECT_EQ(hash_map_put(map, "ba", 200), OK);  // "ab" and "ba" have same hash
+
+    // Check both values can be retrieved correctly
+    int value;
+    EXPECT_EQ(hash_map_get(map, "ab", &value), OK);
+    EXPECT_EQ(value, 100);
+
+    EXPECT_EQ(hash_map_get(map, "ba", &value), OK);
+    EXPECT_EQ(value, 200);
+
+    // Remove one and check the other still exists
+    EXPECT_EQ(hash_map_remove(map, "ab"), OK);
+    EXPECT_EQ(hash_map_contains(map, "ab"), false);
+    EXPECT_EQ(hash_map_contains(map, "ba"), true);
+}
+
 /*** Konec souboru white_box_tests.cpp ***/
